@@ -171,16 +171,17 @@ function rowsToDishes(rows: Record<string, string>[]): Dish[] {
     }))
 }
 
-// Picks the active promotional banner, if any. Only rows marked available
-// (TRUE) are considered; an unavailable banner row hides the banner
-// entirely. Its "description" cell (if present) is shown as a subtitle.
-function rowsToBanner(rows: Record<string, string>[]): PromoBannerData | null {
-  const bannerRow = rows.find((row) => isBannerRow(row) && parseAvailable(row.available) && row.name?.trim())
-  if (!bannerRow) return null
-  return {
-    message: bannerRow.name.trim(),
-    description: bannerRow.description?.trim() || null,
-  }
+// Picks every active promotional banner. Only rows marked available (TRUE)
+// are considered; an unavailable banner row is simply left out. Each row's
+// "description" cell (if present) is shown as a subtitle. When there is more
+// than one, the UI cycles through them.
+function rowsToBanners(rows: Record<string, string>[]): PromoBannerData[] {
+  return rows
+    .filter((row) => isBannerRow(row) && parseAvailable(row.available) && row.name?.trim())
+    .map((row) => ({
+      message: row.name.trim(),
+      description: row.description?.trim() || null,
+    }))
 }
 
 export interface PromoBannerData {
@@ -190,7 +191,7 @@ export interface PromoBannerData {
 
 export interface MenuData {
   dishes: Dish[]
-  banner: PromoBannerData | null
+  banners: PromoBannerData[]
 }
 
 /**
@@ -200,11 +201,18 @@ export interface MenuData {
  */
 export async function fetchMenuData(csvUrl: string = MENU_CSV_URL): Promise<MenuData> {
   if (!csvUrl) {
-    return { dishes: FALLBACK_MENU, banner: null }
+    return { dishes: FALLBACK_MENU, banners: [] }
   }
 
   try {
-    const response = await fetch(csvUrl, { cache: "no-store" })
+        // Google's publish-to-web CSV endpoint caches responses on its own CDN
+    // for a few minutes regardless of our fetch's cache headers, so a
+    // cache-busting query param is appended to force a fresh copy every
+    // time a sheet edit (like disabling a banner) needs to show up right away.
+    const url = new URL(csvUrl)
+    url.searchParams.set("_", Date.now().toString())
+
+    const response = await fetch(url.toString(), { cache: "no-store" })
     if (!response.ok) throw new Error(`CSV request failed with status ${response.status}`)
 
     const csvText = await response.text()
@@ -218,10 +226,10 @@ export async function fetchMenuData(csvUrl: string = MENU_CSV_URL): Promise<Menu
     }
 
     const dishes = rowsToDishes(data)
-    const banner = rowsToBanner(data)
-    return dishes.length > 0 ? { dishes, banner } : { dishes: FALLBACK_MENU, banner: null }
+    const banners = rowsToBanners(data)
+    return dishes.length > 0 ? { dishes, banners } : { dishes: FALLBACK_MENU, banners: [] }
   } catch (error) {
     console.error("[tataoui] Failed to load menu from Google Sheets, using fallback menu:", error)
-    return { dishes: FALLBACK_MENU, banner: null }
+    return { dishes: FALLBACK_MENU, banners: [] }
   }
 }

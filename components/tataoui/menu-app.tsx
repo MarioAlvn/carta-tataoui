@@ -40,7 +40,7 @@ function isLunchDinnerMenuType(menuType: string) {
   return normalized.includes("almuerzo") || normalized.includes("cena")
 }
 
-export function MenuApp({ dishes, banner }: { dishes: Dish[]; banner: PromoBannerData | null }) {
+export function MenuApp({ dishes, banners }: { dishes: Dish[]; banners: PromoBannerData[] }) {
   const [search, setSearch] = useState("")
   const [activeMenuType, setActiveMenuType] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY)
@@ -110,7 +110,7 @@ export function MenuApp({ dishes, banner }: { dishes: Dish[]; banner: PromoBanne
     <div className="relative min-h-screen bg-background">
       <LeafPattern />
       <Header />
-      {banner && <PromoBanner message={banner.message} description={banner.description} />}
+      {banners.length > 0 && <PromoBanner banners={banners} />}
       <main className="pb-10">
         <MenuTypeSelector
           menuTypes={menuTypes}
