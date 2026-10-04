@@ -1,4 +1,5 @@
 import {
+  Bean,
   Egg,
   Fish,
   FlaskConical,
@@ -46,10 +47,10 @@ const ALLERGEN_META: Record<Allergen, AllergenMeta> = {
   Crustáceos: { icon: Shrimp, className: "border-transparent bg-red-600 text-white" },
   Huevos: { icon: Egg, className: "border-transparent bg-yellow-400 text-yellow-950" },
   Pescado: { icon: Fish, className: "border-transparent bg-blue-900 text-white" },
-  Cacahuetes: { icon: Nut, className: "border-transparent bg-amber-800 text-white" },
+  Cacahuetes: { icon: Bean, className: "border-transparent bg-amber-800 text-white" },
   Soja: { icon: Sprout, className: "border-transparent bg-green-600 text-white" },
   Lácteos: { icon: Milk, className: "border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" },
-  "Frutos de cáscara": { icon: TreeDeciduous, className: "border-transparent bg-pink-600 text-white" },
+  "Frutos de cáscara": { icon: Nut, className: "border-transparent bg-pink-600 text-white" },
   Apio: { icon: Salad, className: "border-transparent bg-lime-500 text-white" },
   Mostaza: { icon: FlaskConical, className: "border-transparent bg-yellow-600 text-white" },
   "Granos de sésamo": { icon: Flower2, className: "border-transparent bg-stone-400 text-white" },
