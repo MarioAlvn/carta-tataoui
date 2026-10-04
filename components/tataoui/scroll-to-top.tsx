@@ -33,7 +33,7 @@ export function ScrollToTop() {
       onClick={scrollToTop}
       aria-label="Volver arriba"
       className={cn(
-        "fixed bottom-6 right-6 z-50 flex size-12 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition-all duration-300 hover:bg-emerald-700 active:scale-95",
+        "fixed bottom-6 right-6 z-50 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:opacity-90 active:scale-95",
         isVisible 
           ? "translate-y-0 opacity-100" 
           : "pointer-events-none translate-y-10 opacity-0"
