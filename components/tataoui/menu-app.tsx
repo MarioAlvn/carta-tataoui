@@ -37,9 +37,6 @@ export function MenuApp({
   dishes: initialDishes,
   banners: initialBanners,
 }: { dishes: Dish[]; banners: PromoBannerData[] }) {
-  // The server renders the first paint. From then on, this polls the API
-  // route in the background so new sheet edits (dishes, availability,
-  // banners) show up on their own, without the visitor reloading the page.
   const { data } = useSWR<MenuData>("/api/tataoui/menu", fetchJson, {
     fallbackData: { dishes: initialDishes, banners: initialBanners },
     refreshInterval: REFRESH_INTERVAL_MS,
@@ -53,7 +50,8 @@ export function MenuApp({
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY)
   const [activeFilters, setActiveFilters] = useState<Allergen[]>([])
 
-  const menuTypes = useMemo(() => uniqueInOrder(dishes.flatMap((dish) => dish.menuTypes)), [dishes])
+  // AÑADIDO: Tipo explícito (dish: Dish)
+  const menuTypes = useMemo(() => uniqueInOrder(dishes.flatMap((dish: Dish) => dish.menuTypes)), [dishes])
 
   useEffect(() => {
     if (menuTypes.length === 0) return
@@ -62,15 +60,15 @@ export function MenuApp({
     }
   }, [menuTypes, activeMenuType])
 
+  // AÑADIDO: Tipo explícito (dish: Dish)
   const dishesForMenuType = useMemo(
-    () => (activeMenuType ? dishes.filter((dish) => dish.menuTypes.includes(activeMenuType)) : dishes),
+    () => (activeMenuType ? dishes.filter((dish: Dish) => dish.menuTypes.includes(activeMenuType)) : dishes),
     [dishes, activeMenuType],
   )
 
-  // Category tabs are recalculated dynamically: only categories that belong
-  // to dishes within the currently selected menu type are shown.
   const categories = useMemo(() => {
-    const dynamicCategories = uniqueInOrder(dishesForMenuType.map((dish) => dish.category))
+    // AÑADIDO: Tipo explícito (dish: Dish)
+    const dynamicCategories = uniqueInOrder(dishesForMenuType.map((dish: Dish) => dish.category))
     return [ALL_CATEGORY, ...dynamicCategories]
   }, [dishesForMenuType])
 
@@ -83,7 +81,8 @@ export function MenuApp({
   const filteredDishes = useMemo(() => {
     const query = normalize(search.trim())
 
-    return dishesForMenuType.filter((dish) => {
+    // AÑADIDO: Tipo explícito (dish: Dish)
+    return dishesForMenuType.filter((dish: Dish) => {
       if (activeCategory !== ALL_CATEGORY && dish.category !== activeCategory) return false
 
       if (query) {
@@ -91,7 +90,8 @@ export function MenuApp({
         if (!haystack.includes(query)) return false
       }
 
-      if (activeFilters.some((allergen) => dish.allergens.includes(allergen))) return false
+      // AÑADIDO: Tipo explícito para allergen
+      if (activeFilters.some((allergen: Allergen) => dish.allergens.includes(allergen))) return false
 
       return true
     })
