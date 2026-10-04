@@ -11,6 +11,7 @@ import { MenuTypeSelector } from "./menu-type-selector"
 import { CategoryTabs } from "./category-tabs"
 import { DishList } from "./dish-list"
 import { LeafPattern } from "./leaf-pattern"
+import { ScrollToTop } from "./scroll-to-top"
 
 const ALL_CATEGORY = "Todos"
 
@@ -37,9 +38,6 @@ export function MenuApp({
   dishes: initialDishes,
   banners: initialBanners,
 }: { dishes: Dish[]; banners: PromoBannerData[] }) {
-  // The server renders the first paint. From then on, this polls the API
-  // route in the background so new sheet edits (dishes, availability,
-  // banners) show up on their own, without the visitor reloading the page.
   const { data } = useSWR<MenuData>("/api/tataoui/menu", fetchJson, {
     fallbackData: { dishes: initialDishes, banners: initialBanners },
     refreshInterval: REFRESH_INTERVAL_MS,
@@ -53,7 +51,8 @@ export function MenuApp({
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY)
   const [activeFilters, setActiveFilters] = useState<Allergen[]>([])
 
-  const menuTypes = useMemo(() => uniqueInOrder(dishes.flatMap((dish) => dish.menuTypes)), [dishes])
+  // Tipado estricto (dish: Dish) restaurado para evitar errores de Build
+  const menuTypes = useMemo(() => uniqueInOrder(dishes.flatMap((dish: Dish) => dish.menuTypes)), [dishes])
 
   useEffect(() => {
     if (menuTypes.length === 0) return
@@ -63,16 +62,23 @@ export function MenuApp({
   }, [menuTypes, activeMenuType])
 
   const dishesForMenuType = useMemo(
-    () => (activeMenuType ? dishes.filter((dish) => dish.menuTypes.includes(activeMenuType)) : dishes),
+    () => (activeMenuType ? dishes.filter((dish: Dish) => dish.menuTypes.includes(activeMenuType)) : dishes),
     [dishes, activeMenuType],
   )
 
-  // Category tabs are recalculated dynamically: only categories that belong
-  // to dishes within the currently selected menu type are shown.
   const categories = useMemo(() => {
-    const dynamicCategories = uniqueInOrder(dishesForMenuType.map((dish) => dish.category))
+    const dynamicCategories = uniqueInOrder(dishesForMenuType.map((dish: Dish) => dish.category))
     return [ALL_CATEGORY, ...dynamicCategories]
   }, [dishesForMenuType])
+
+  // -------- AQUÍ ESTÁ LA LÓGICA DE ALÉRGENOS DINÁMICOS --------
+  const usedAllergens = useMemo(() => {
+    // Extraemos todas las alergias solo de los platos que se muestran en esta pestaña
+    const allAllergens = dishesForMenuType.flatMap((dish: Dish) => dish.allergens)
+    // Eliminamos los duplicados
+    return [...new Set(allAllergens)] as Allergen[]
+  }, [dishesForMenuType])
+  // ------------------------------------------------------------
 
   useEffect(() => {
     if (!categories.includes(activeCategory)) {
@@ -83,7 +89,7 @@ export function MenuApp({
   const filteredDishes = useMemo(() => {
     const query = normalize(search.trim())
 
-    return dishesForMenuType.filter((dish) => {
+    return dishesForMenuType.filter((dish: Dish) => {
       if (activeCategory !== ALL_CATEGORY && dish.category !== activeCategory) return false
 
       if (query) {
@@ -91,7 +97,7 @@ export function MenuApp({
         if (!haystack.includes(query)) return false
       }
 
-      if (activeFilters.some((allergen) => dish.allergens.includes(allergen))) return false
+      if (activeFilters.some((allergen: Allergen) => dish.allergens.includes(allergen))) return false
 
       return true
     })
@@ -124,10 +130,12 @@ export function MenuApp({
           onSearchChange={setSearch}
           activeFilters={activeFilters}
           onToggleFilter={toggleFilter}
+          availableAllergens={usedAllergens} // <-- PASAMOS LA LISTA AL COMPONENTE
         />
         <CategoryTabs categories={categories} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
         <DishList dishes={filteredDishes} />
       </main>
+      <ScrollToTop />
     </div>
   )
 }

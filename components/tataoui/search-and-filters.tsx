@@ -6,16 +6,15 @@ import { cn } from "@/lib/utils"
 import type { Allergen } from "@/lib/tataoui/types"
 import { ALLERGEN_ICONS, ALLERGEN_LABELS } from "./allergen-icon"
 
-const ALL_ALLERGENS = Object.keys(ALLERGEN_LABELS) as Allergen[]
-
 interface SearchAndFiltersProps {
   search: string
   onSearchChange: (value: string) => void
   activeFilters: Allergen[]
   onToggleFilter: (filter: Allergen) => void
+  availableAllergens: Allergen[] // Recibimos la lista dinámica aquí
 }
 
-export function SearchAndFilters({ search, onSearchChange, activeFilters, onToggleFilter }: SearchAndFiltersProps) {
+export function SearchAndFilters({ search, onSearchChange, activeFilters, onToggleFilter, availableAllergens }: SearchAndFiltersProps) {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-3 px-4 pt-4">
       <div className="relative">
@@ -29,29 +28,32 @@ export function SearchAndFilters({ search, onSearchChange, activeFilters, onTogg
         />
       </div>
 
-      <div className="-mx-4 flex touch-pan-x gap-2 overflow-x-auto overscroll-x-contain px-4 py-1.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ALL_ALLERGENS.map((allergen) => {
-          const Icon = ALLERGEN_ICONS[allergen]
-          const isActive = activeFilters.includes(allergen)
-          return (
-            <button
-              key={allergen}
-              type="button"
-              onClick={() => onToggleFilter(allergen)}
-              aria-pressed={isActive}
-              className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors",
-                isActive
-                  ? "border-accent bg-accent text-accent-foreground"
-                  : "border-border bg-card text-muted-foreground hover:border-accent/40",
-              )}
-            >
-              <Icon className="size-3.5" aria-hidden="true" />
-              {`Sin ${ALLERGEN_LABELS[allergen]}`}
-            </button>
-          )
-        })}
-      </div>
+      {/* Solo mostramos la barra de alérgenos si hay alérgenos en esta pestaña */}
+      {availableAllergens.length > 0 && (
+        <div className="-mx-4 flex touch-pan-x gap-2 overflow-x-auto overscroll-x-contain px-4 py-1.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {availableAllergens.map((allergen) => {
+            const Icon = ALLERGEN_ICONS[allergen]
+            const isActive = activeFilters.includes(allergen)
+            return (
+              <button
+                key={allergen}
+                type="button"
+                onClick={() => onToggleFilter(allergen)}
+                aria-pressed={isActive}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors",
+                  isActive
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border bg-card text-muted-foreground hover:border-accent/40",
+                )}
+              >
+                <Icon className="size-3.5" aria-hidden="true" />
+                {`Sin ${ALLERGEN_LABELS[allergen]}`}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
