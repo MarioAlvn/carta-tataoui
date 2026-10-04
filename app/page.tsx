@@ -1,8 +1,6 @@
 import { MenuApp } from "@/components/tataoui/menu-app"
 import { fetchMenuData } from "@/lib/tataoui/menu-data"
 
-export const revalidate = 120;
-
 export default async function Page() {
   const { dishes, banners } = await fetchMenuData()
 
