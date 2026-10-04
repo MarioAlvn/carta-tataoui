@@ -16,22 +16,22 @@ const nunito = Nunito({
 })
 
 export const metadata: Metadata = {
-  title: 'tataoui | Carta digital',
+  title: 'Tataoui | Carta digital',
   description:
-    'Carta digital de tataoui, bar-restaurante de ambiente boho-chic. Entrantes, platos para compartir, panes, guisos y postres.',
-  generator: 'v0.app',
+    'Carta digital de tataoui, bar-restaurante local en Morón de la Frontera.',
+  generator: 'M',
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
+        url: '/icon.png',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/icon-dark-32x32.png',
+        url: '/icon.png',
         media: '(prefers-color-scheme: dark)',
       },
       {
-        url: '/icon.svg',
+        url: '/icon.png',
         type: 'image/svg+xml',
       },
     ],
