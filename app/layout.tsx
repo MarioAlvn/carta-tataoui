@@ -19,15 +19,14 @@ export const metadata: Metadata = {
   title: 'tataoui | Carta digital',
   description:
     'Carta digital de tataoui, bar-restaurante de ambiente boho-chic. Entrantes, platos para compartir, panes, guisos y postres.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
+        url: '/mini-logo.png',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/icon-dark-32x32.png',
+        url: '/mini-logo.png',
         media: '(prefers-color-scheme: dark)',
       },
       {
