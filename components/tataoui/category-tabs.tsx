@@ -1,6 +1,6 @@
 "use client"
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 
 interface CategoryTabsProps {
   categories: string[]
@@ -11,24 +11,34 @@ interface CategoryTabsProps {
 export function CategoryTabs({ categories, activeCategory, onCategoryChange }: CategoryTabsProps) {
   return (
     <div className="mx-auto max-w-lg px-4 pt-4">
-      <Tabs value={activeCategory} onValueChange={(value) => onCategoryChange(value as string)}>
-        <div className="-mx-4 touch-pan-x overflow-x-auto overscroll-x-contain px-4 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsList
-            variant="line"
-            className="h-auto w-max flex-nowrap gap-2 bg-transparent p-0"
-          >
-            {categories.map((category) => (
-              <TabsTrigger
+      <div
+        role="tablist"
+        aria-label="Categorías"
+        className="-mx-4 touch-pan-x overflow-x-auto overscroll-x-contain px-4 py-1.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex w-max flex-nowrap gap-2">
+          {categories.map((category) => {
+            const isActive = category === activeCategory
+            return (
+              <button
                 key={category}
-                value={category}
-                className="h-9 shrink-0 rounded-full border border-border bg-card px-4 text-sm font-semibold text-muted-foreground after:hidden data-active:border-primary data-active:!bg-primary data-active:!text-primary-foreground"
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => onCategoryChange(category)}
+                className={cn(
+                  "h-9 shrink-0 rounded-full border px-4 text-sm font-semibold leading-none transition-colors",
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/40",
+                )}
               >
                 {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+              </button>
+            )
+          })}
         </div>
-      </Tabs>
+      </div>
     </div>
   )
 }

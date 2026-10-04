@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import type { Dish } from "@/lib/tataoui/types"
-import type { PromoBannerData } from "@/lib/tataoui/menu-data"
+import useSWR from "swr"
+import type { Allergen, Dish } from "@/lib/tataoui/types"
+import type { MenuData, PromoBannerData } from "@/lib/tataoui/menu-data"
 import { Header } from "./header"
 import { PromoBanner } from "./promo-banner"
-import { SearchAndFilters, type DietFilterKey } from "./search-and-filters"
+import { SearchAndFilters } from "./search-and-filters"
 import { MenuTypeSelector } from "./menu-type-selector"
 import { CategoryTabs } from "./category-tabs"
 import { DishList } from "./dish-list"
@@ -21,40 +22,43 @@ function normalize(value: string) {
 }
 
 function uniqueInOrder(values: string[]) {
-  const seen = new Set<string>()
-  const found: string[] = []
-  for (const value of values) {
-    if (value && !seen.has(value)) {
-      seen.add(value)
-      found.push(value)
-    }
-  }
-  return found
+  return [...new Set(values.filter(Boolean))]
 }
 
-// The CSV wording for the "lunch/dinner" moment can vary (e.g. "Almuerzo/Cena"
-// vs "Almuerzos y Cenas"), so the default tab is matched by meaning rather
-// than an exact string.
-function isLunchDinnerMenuType(menuType: string) {
-  const normalized = normalize(menuType)
-  return normalized.includes("almuerzo") || normalized.includes("cena")
+const REFRESH_INTERVAL_MS = 3 * 60 * 1000 // Re-fetch the sheet every 3 minutes.
+
+async function fetchJson(url: string): Promise<MenuData> {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
+  return response.json()
 }
 
-export function MenuApp({ dishes, banners }: { dishes: Dish[]; banners: PromoBannerData[] }) {
+export function MenuApp({
+  dishes: initialDishes,
+  banners: initialBanners,
+}: { dishes: Dish[]; banners: PromoBannerData[] }) {
+  // The server renders the first paint. From then on, this polls the API
+  // route in the background so new sheet edits (dishes, availability,
+  // banners) show up on their own, without the visitor reloading the page.
+  const { data } = useSWR<MenuData>("/api/tataoui/menu", fetchJson, {
+    fallbackData: { dishes: initialDishes, banners: initialBanners },
+    refreshInterval: REFRESH_INTERVAL_MS,
+    revalidateOnFocus: true,
+  })
+  const dishes = data?.dishes ?? initialDishes
+  const banners = data?.banners ?? initialBanners
+
   const [search, setSearch] = useState("")
   const [activeMenuType, setActiveMenuType] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY)
-  const [activeFilters, setActiveFilters] = useState<DietFilterKey[]>([])
+  const [activeFilters, setActiveFilters] = useState<Allergen[]>([])
 
-  // Top-level segmented filter: the unique "menu_type" values from the CSV.
-  // A dish can list more than one (comma/pipe separated), so all of them are
-  // flattened before deduplicating.
   const menuTypes = useMemo(() => uniqueInOrder(dishes.flatMap((dish) => dish.menuTypes)), [dishes])
 
   useEffect(() => {
     if (menuTypes.length === 0) return
     if (!activeMenuType || !menuTypes.includes(activeMenuType)) {
-      setActiveMenuType(menuTypes.find(isLunchDinnerMenuType) ?? menuTypes[0])
+      setActiveMenuType(menuTypes[0])
     }
   }, [menuTypes, activeMenuType])
 
@@ -87,15 +91,13 @@ export function MenuApp({ dishes, banners }: { dishes: Dish[]; banners: PromoBan
         if (!haystack.includes(query)) return false
       }
 
-      if (activeFilters.includes("sin-gluten") && dish.allergens.includes("gluten")) return false
-      if (activeFilters.includes("sin-lactosa") && dish.allergens.includes("lactosa")) return false
-      if (activeFilters.includes("vegetariano") && !dish.vegetarian) return false
+      if (activeFilters.some((allergen) => dish.allergens.includes(allergen))) return false
 
       return true
     })
   }, [dishesForMenuType, search, activeCategory, activeFilters])
 
-  function toggleFilter(filter: DietFilterKey) {
+  function toggleFilter(filter: Allergen) {
     setActiveFilters((current) =>
       current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter],
     )

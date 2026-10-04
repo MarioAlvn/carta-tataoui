@@ -1,22 +1,18 @@
 "use client"
 
-import { Leaf, Search, WheatOff, MilkOff } from "lucide-react"
+import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import type { Allergen } from "@/lib/tataoui/types"
+import { ALLERGEN_ICONS, ALLERGEN_LABELS } from "./allergen-icon"
 
-export type DietFilterKey = "sin-gluten" | "vegetariano" | "sin-lactosa"
-
-const DIET_FILTERS: { key: DietFilterKey; label: string; icon: typeof Leaf }[] = [
-  { key: "sin-gluten", label: "Sin Gluten", icon: WheatOff },
-  { key: "vegetariano", label: "Vegetariano", icon: Leaf },
-  { key: "sin-lactosa", label: "Sin Lactosa", icon: MilkOff },
-]
+const ALL_ALLERGENS = Object.keys(ALLERGEN_LABELS) as Allergen[]
 
 interface SearchAndFiltersProps {
   search: string
   onSearchChange: (value: string) => void
-  activeFilters: DietFilterKey[]
-  onToggleFilter: (filter: DietFilterKey) => void
+  activeFilters: Allergen[]
+  onToggleFilter: (filter: Allergen) => void
 }
 
 export function SearchAndFilters({ search, onSearchChange, activeFilters, onToggleFilter }: SearchAndFiltersProps) {
@@ -33,14 +29,15 @@ export function SearchAndFilters({ search, onSearchChange, activeFilters, onTogg
         />
       </div>
 
-      <div className="-mx-4 flex touch-pan-x gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {DIET_FILTERS.map(({ key, label, icon: Icon }) => {
-          const isActive = activeFilters.includes(key)
+      <div className="-mx-4 flex touch-pan-x gap-2 overflow-x-auto overscroll-x-contain px-4 py-1.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {ALL_ALLERGENS.map((allergen) => {
+          const Icon = ALLERGEN_ICONS[allergen]
+          const isActive = activeFilters.includes(allergen)
           return (
             <button
-              key={key}
+              key={allergen}
               type="button"
-              onClick={() => onToggleFilter(key)}
+              onClick={() => onToggleFilter(allergen)}
               aria-pressed={isActive}
               className={cn(
                 "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors",
@@ -50,7 +47,7 @@ export function SearchAndFilters({ search, onSearchChange, activeFilters, onTogg
               )}
             >
               <Icon className="size-3.5" aria-hidden="true" />
-              {label}
+              {`Sin ${ALLERGEN_LABELS[allergen]}`}
             </button>
           )
         })}

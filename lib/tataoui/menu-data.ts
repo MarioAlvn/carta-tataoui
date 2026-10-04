@@ -19,7 +19,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Ensaladilla de atún",
     description: "Clásica y casera",
     price: 7.5,
-    allergens: ["pescado", "huevo"],
+    allergens: ["Pescado", "Huevos"],
     vegetarian: false,
   },
   {
@@ -29,7 +29,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Bravas muy bravas",
     description: "Nuestra salsa especial picante",
     price: 7.9,
-    allergens: ["gluten"],
+    allergens: ["Gluten", "Mostaza"],
     vegetarian: true,
   },
   {
@@ -39,7 +39,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Crujientes queso y puerro",
     description: "Fritos a la perfección",
     price: 6.9,
-    allergens: ["lactosa", "gluten"],
+    allergens: ["Lácteos", "Gluten"],
     vegetarian: true,
   },
   {
@@ -49,7 +49,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Serranito tataoui",
     description: "Pollo/lomo, cheddar, pimiento rojo, jamón",
     price: 7.8,
-    allergens: ["gluten", "lactosa"],
+    allergens: ["Gluten", "Lácteos"],
     vegetarian: false,
   },
   {
@@ -59,7 +59,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Burguer tataoui",
     description: "Black Angus 200gr, pan y queso, 3 toppings",
     price: 12.9,
-    allergens: ["gluten", "lactosa"],
+    allergens: ["Gluten", "Lácteos", "Mostaza"],
     vegetarian: false,
   },
   {
@@ -79,7 +79,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Solomillo al whisky",
     description: "El clásico sevillano",
     price: 6.9,
-    allergens: ["sulfitos"],
+    allergens: ["Dióxido de azufre y sulfitos"],
     vegetarian: false,
   },
   {
@@ -89,7 +89,7 @@ export const FALLBACK_MENU: Dish[] = [
     name: "Porción de tarta",
     description: "Preguntar por fuera de carta",
     price: 4.8,
-    allergens: ["gluten", "lactosa", "huevo"],
+    allergens: ["Gluten", "Lácteos", "Huevos", "Frutos de cáscara"],
     vegetarian: true,
   },
   {
@@ -104,14 +104,49 @@ export const FALLBACK_MENU: Dish[] = [
   },
 ]
 
-const KNOWN_ALLERGENS: Allergen[] = ["gluten", "lactosa", "huevo", "pescado", "sulfitos", "frutos-secos", "marisco"]
+// The 14 EU-mandated allergens. The CSV's "allergens" column should contain
+// these exact strings (comma/pipe separated), but matching is accent- and
+// case-insensitive so minor sheet typos like "cacahuetes" or "GLUTEN" still
+// resolve to the canonical value.
+const ALL_ALLERGENS: Allergen[] = [
+  "Gluten",
+  "Crustáceos",
+  "Huevos",
+  "Pescado",
+  "Cacahuetes",
+  "Soja",
+  "Lácteos",
+  "Frutos de cáscara",
+  "Apio",
+  "Mostaza",
+  "Granos de sésamo",
+  "Dióxido de azufre y sulfitos",
+  "Moluscos",
+  "Altramuces",
+]
+
+function normalizeAllergenKey(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+}
+
+const ALLERGEN_LOOKUP = new Map<string, Allergen>(ALL_ALLERGENS.map((a) => [normalizeAllergenKey(a), a]))
 
 function parseAllergens(raw: string | undefined): Allergen[] {
   if (!raw) return []
-  return raw
-    .split(/[|,;]/)
-    .map((a) => a.trim().toLowerCase())
-    .filter((a): a is Allergen => KNOWN_ALLERGENS.includes(a as Allergen))
+  const seen = new Set<Allergen>()
+  const result: Allergen[] = []
+  for (const part of raw.split(/[|,;]/)) {
+    const match = ALLERGEN_LOOKUP.get(normalizeAllergenKey(part))
+    if (match && !seen.has(match)) {
+      seen.add(match)
+      result.push(match)
+    }
+  }
+  return result
 }
 
 // A single "menu_type" cell can list more than one moment of day
@@ -205,7 +240,7 @@ export async function fetchMenuData(csvUrl: string = MENU_CSV_URL): Promise<Menu
   }
 
   try {
-        // Google's publish-to-web CSV endpoint caches responses on its own CDN
+    // Google's publish-to-web CSV endpoint caches responses on its own CDN
     // for a few minutes regardless of our fetch's cache headers, so a
     // cache-busting query param is appended to force a fresh copy every
     // time a sheet edit (like disabling a banner) needs to show up right away.

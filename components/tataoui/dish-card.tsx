@@ -1,5 +1,5 @@
 import { Leaf } from "lucide-react"
-import { AllergenIcon, ALLERGEN_LABELS } from "./allergen-icon"
+import { AllergenBadge } from "./allergen-icon"
 import type { Dish } from "@/lib/tataoui/types"
 
 const priceFormatter = new Intl.NumberFormat("es-ES", {
@@ -25,11 +25,10 @@ export function DishCard({ dish }: { dish: Dish }) {
       {dish.description && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{dish.description}</p>}
 
       {dish.allergens.length > 0 && (
-        <ul className="mt-3 flex flex-wrap items-center gap-2.5" aria-label="Alérgenos">
+        <ul className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Alérgenos">
           {dish.allergens.map((allergen) => (
-            <li key={allergen} className="flex items-center gap-1 text-muted-foreground" title={ALLERGEN_LABELS[allergen]}>
-              <AllergenIcon allergen={allergen} className="size-3.5" />
-              <span className="text-[11px] font-medium">{ALLERGEN_LABELS[allergen]}</span>
+            <li key={allergen}>
+              <AllergenBadge allergen={allergen} />
             </li>
           ))}
         </ul>
